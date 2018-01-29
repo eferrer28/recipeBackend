@@ -3,82 +3,90 @@ from __future__ import unicode_literals
 
 from django.shortcuts import render
 
-from django.http import HttpResponse, JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.renderers import JSONRenderer
-from rest_framework.parsers import JSONParser
+from django.http import Http404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+
+
 from snippets.models import Snippet, Meal
 from snippets.serializers import SnippetSerializer, MealSerializer
 # Create your views here.
 
 
-@csrf_exempt
-def snippet_list(request):
+class SnippetList(APIView):
     """
-    List all code snippets, or create a new snippet.
+    List all snippets, or create a new snippet.
     """
-    if request.method == 'GET':
+    def get(self, request, format=None):
         snippets = Snippet.objects.all()
         serializer = SnippetSerializer(snippets, many=True)
-        return JsonResponse(serializer.data, safe=False)
+        return Response(serializer.data)
 
-    elif request.method == 'POST':
-        data = JSONParser().parse(request)
-        serializer = SnippetSerializer(data=data)
+    def post(self, request, format=None):
+        serializer = SnippetSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data, status=201)
-        return JsonResponse(serializer.errors, status=400)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-@csrf_exempt
-def snippet_detail(request, pk):
+class SnippetDetail(APIView):
     """
-    Retrieve, update or delete a code snippet.
+    Retrieve, update or delete a snippet instance.
     """
-    try:
-        snippet = Snippet.objects.get(pk=pk)
-    except Snippet.DoesNotExist:
-        return HttpResponse(status=404)
+    def get_object(self, pk):
+        try:
+            return Snippet.objects.get(pk=pk)
+        except Snippet.DoesNotExist:
+            raise Http404
 
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
+        snippet = self.get_object(pk)
         serializer = SnippetSerializer(snippet)
-        return JsonResponse(serializer.data)
+        return Response(serializer.data)
 
-    elif request.method == 'PUT':
-        data = JSONParser().parse(request)
-        serializer = SnippetSerializer(snippet, data=data)
+    def put(self, request, pk, format=None):
+        snippet = self.get_object(pk)
+        serializer = SnippetSerializer(snippet, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            return JsonResponse(serializer.data)
-        return JsonResponse(serializer.errors, status=400)
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    elif request.method == 'DELETE':
+    def delete(self, request, pk, format=None):
+        snippet = self.get_object(pk)
         snippet.delete()
-        return HttpResponse(status=204)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-
-@csrf_exempt
-def meal_list(request):
+class MealList(APIView):
     """
-    List all code snippets, or create a new snippet.
+    List all snippets, or create a new snippet.
     """
-    if request.method == 'GET':
-        snippets = Meal.objects.all()
-        serializer = MealSerializer(snippets, many=True)
-        return JsonResponse(serializer.data, safe=False)
+    def get(self, request, format=None):
+        meals = Meal.objects.all()
+        serializer = MealSerializer(meals, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = MealSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@csrf_exempt
-def meal_detail(request, pk):
-    """
-    Retrieve, update or delete a code snippet.
-    """
-    try:
-        meal = Meal.objects.get(pk=pk)
-    except Meal.DoesNotExist:
-        return HttpResponse(status=404)
 
-    if request.method == 'GET':
-        serializer = MenuSerializer(meal)
-        return JsonResponse(serializer.data)
+class MealDetail(APIView):
+    """
+    Retrieve, update or delete a snippet instance.
+    """
+    def get_object(self, pk):
+        try:
+            return Meal.objects.get(pk=pk)
+        except Meal.DoesNotExist:
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        meal = self.get_object(pk)
+        serializer = MealSerializer(meal)
+        return Response(serializer.data)
