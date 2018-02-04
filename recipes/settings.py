@@ -25,7 +25,7 @@ SECRET_KEY = 'h2mv580pskl&z)zq=n8i=_ez3265dat_-)m1a$@6^rbc-xk3=k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['pure-oasis-23611.herokuapp.com']
 
 
 # Application definition
